@@ -24,8 +24,8 @@ export default function Appearance() {
                 <div className="space-y-6">
                     <HeadingSmall title="Configuración de apariencia" description="Actualiza la configuración de apariencia de tu cuenta" />
                     <AppearanceTabs className="mb-10"  />
-                    <HeadingSmall title="Temas" description="Elige tu tema preferido" />
-                    <ThemeToggleTab />
+                    {/* <HeadingSmall title="Temas" description="Elige tu tema preferido" />
+                    <ThemeToggleTab /> */}
                 </div>
             </SettingsLayout>
         </AppLayout>

@@ -14,8 +14,12 @@ class Position extends Model
         'updated_by',
     ];
 
-    public function personnelHistories()
+    protected $casts = [
+        'active' => 'boolean',
+    ];
+
+    public function personnels()
     {
-        return $this->hasMany(PersonnelPositionHistory::class);
+        return $this->hasMany(Personnel::class);
     }
 }

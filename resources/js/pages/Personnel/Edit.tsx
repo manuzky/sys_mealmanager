@@ -12,25 +12,14 @@ interface Personnel {
     document_type: string;
     id_number: string;
     email: string;
-    birth_date: string;
+    birth_date: string | null;
     marital_status: string;
     phone: string | null;
     secondary_phone: string | null;
     address: string | null;
     gender: string | null;
-    hire_date: string;
-    position_id?: number | null;
-    photo?: string | null;
-    curriculum?: string | null;
-    emergency_contacts?: EmergencyContact[];
-}
-
-interface EmergencyContact {
-    id: number;
-    relationship_id: number;
-    name: string;
-    phone: string;
-    secondary_phone: string | null;
+    position_id: number | null;
+    photo: string | null;
 }
 
 interface Position {
@@ -42,66 +31,27 @@ interface Position {
 interface Props {
     personnel: Personnel;
     positions: Position[];
-    emergencyRelationships: {
-        id: number;
-        name: string;
-    }[];
-    current_position_id?: number | null;
 }
 
-export default function Edit({
-    personnel,
-    positions,
-    emergencyRelationships,
-    current_position_id,
-}: Props) {
-
+export default function Edit({ personnel, positions }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
-        {
-            title: 'Personal',
-            href: '/personnel',
-        },
-        {
-            title: 'Editar',
-            href: `/personnel/${personnel.id}/edit`,
-        },
+        { title: 'Personal', href: '/personnel' },
+        { title: 'Editar', href: `/personnel/${personnel.id}/edit` },
     ];
 
     const parseLocalDate = (dateString: string) => {
         const [year, month, day] = dateString.split('-').map(Number);
         return new Date(year, month - 1, day);
     };
-    
-    const [date, setDate] = useState<Date | undefined>(
-        personnel.birth_date
-            ? parseLocalDate(personnel.birth_date)
-            : undefined
-    );
 
-    const [hireDate, setHireDate] = useState<Date | undefined>(
-        personnel.hire_date
-            ? parseLocalDate(personnel.hire_date)
-            : undefined
-    );
-    
+    const [date, setDate] = useState<Date | undefined>(personnel.birth_date ? parseLocalDate(personnel.birth_date) : undefined);
     const emailParts = personnel.email?.split('@') ?? ['', ''];
-
-    const emailDomain =
-        emailParts[1] &&
-        ['gmail.com', 'hotmail.com', 'outlook.com'].includes(emailParts[1])
-            ? `@${emailParts[1]}`
-            : 'other';
-
-    const emailCustomDomain =
-        emailDomain === 'other' ? `@${emailParts[1]}` : '';
-    const phoneCode = personnel.phone?.substring(0, 4) ?? '0412';
+    const emailDomain = emailParts[1] && ['gmail.com', 'hotmail.com', 'outlook.com'].includes(emailParts[1]) ? `@${emailParts[1]}` : 'other';
+    const emailCustomDomain = emailDomain === 'other' ? `@${emailParts[1]}` : '';
+    const phoneCode = personnel.phone?.substring(0, 4) || '0412';
     const phoneNumber = personnel.phone?.substring(4) ?? '';
-
-    const secondaryPhoneCode =
-        personnel.secondary_phone?.substring(0, 4) ?? '0412';
-
-    const secondaryPhoneNumber =
-        personnel.secondary_phone?.substring(4) ?? '';
+    const secondaryPhoneCode = personnel.secondary_phone?.substring(0, 4) || '0412';
+    const secondaryPhoneNumber = personnel.secondary_phone?.substring(4) ?? '';
 
     const { data, setData, post, processing, errors } = useForm({
         first_name: personnel.first_name ?? '',
@@ -112,53 +62,32 @@ export default function Edit({
         email_domain: emailDomain,
         email_custom_domain: emailCustomDomain,
         birth_date: personnel.birth_date ?? '',
+        gender: personnel.gender ?? '',
         marital_status: personnel.marital_status ?? '',
         phone_code: phoneCode,
         phone: phoneNumber,
         secondary_phone_code: secondaryPhoneCode,
         secondary_phone: secondaryPhoneNumber,
-        emergency_contacts: personnel.emergency_contacts?.map((contact) => ({
-            relationship_id: String(contact.relationship_id),
-            name: contact.name,
-            phone_code: contact.phone.substring(0, 4) ?? '0412',
-            phone: contact.phone.substring(4) ?? '',
-            secondary_phone: contact.secondary_phone ?? '',
-        })) ?? [
-            {
-                relationship_id: '',
-                name: '',
-                phone_code: '0412',
-                phone: '',
-                secondary_phone: '',
-            }
-        ],
         address: personnel.address ?? '',
-        gender: personnel.gender ?? '',
-        hire_date: personnel.hire_date ?? '',
-        position_id: current_position_id ?? '',
+        position_id: personnel.position_id != null ? String(personnel.position_id) : '',
         photo: null as File | null,
-        curriculum: null as File | null,
         photo_remove: false,
-        curriculum_remove: false,
         _method: 'put',
     });
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
-
         post(route('personnel.update', personnel.id), {
             forceFormData: true,
-            onSuccess: () => { notify.success('Personal editado correctamente'); },
-            onError: () => { notify.error('Revisa los datos del formulario'); },
+            onSuccess: () => notify.success('Personal editado correctamente'),
+            onError: () => notify.error('Revisa los datos del formulario'),
         });
     }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Editar Personal" />
-
             <div className="p-6 w-full space-y-6">
-
                 <Form
                     data={data}
                     setData={setData}
@@ -166,12 +95,8 @@ export default function Edit({
                     processing={processing}
                     date={date}
                     setDate={setDate}
-                    hireDate={hireDate}
-                    setHireDate={setHireDate}
                     positions={positions}
-                    emergencyRelationships={emergencyRelationships}
                     currentPhoto={personnel.photo}
-                    currentCurriculum={personnel.curriculum}
                     onSubmit={submit}
                     submitLabel="Actualizar"
                 />

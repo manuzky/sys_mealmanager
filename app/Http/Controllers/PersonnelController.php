@@ -20,7 +20,6 @@ class PersonnelController extends Controller
         $this->middleware('permission:personnel.view')->only(['index', 'show']);
         $this->middleware('permission:personnel.create')->only(['create', 'store']);
         $this->middleware('permission:personnel.edit')->only(['edit', 'update']);
-        // $this->middleware('permission:personnel.delete')->only(['destroy']);
         $this->middleware('permission:personnel.toggle-status')->only(['toggleStatus']);
     }
     
@@ -31,13 +30,16 @@ class PersonnelController extends Controller
         $search = $request->search;
 
         $personnels = Personnel::query()
+            ->with('position')
             ->when($search, function ($query) use ($search) {
-                $query->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('id_number', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                $query->where(function ($query) use ($search) {
+                    $query->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('id_number', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
             })
-            ->orderBy("id","desc")
+            ->orderByDesc('id')
             ->paginate(10)
             ->withQueryString();
 
@@ -55,7 +57,6 @@ class PersonnelController extends Controller
     {
         return Inertia::render('Personnel/Create', [
             'positions' => Position::where('active', true)->get(),
-            'emergencyRelationships' => EmergencyContactRelationship::all(),
         ]);
     }
 
@@ -65,94 +66,48 @@ class PersonnelController extends Controller
     {
         $validated = $request->validated();
 
-        $photoPath = $request->file('photo')
+        $photoPath = $request->hasFile('photo')
             ? $request->file('photo')->store('personnel/photos', 'public')
             : null;
 
-        $curriculumPath = $request->file('curriculum')
-            ? $request->file('curriculum')->store('personnel/curriculums', 'public')
+        $email = $this->buildEmail($validated);
+
+        $phone = !empty($validated['phone'])
+            ? ($validated['phone_code'] ?? '') . $validated['phone']
             : null;
 
-        DB::transaction(function () use ($validated, $photoPath, $curriculumPath) {
+        $secondaryPhone = !empty($validated['secondary_phone'])
+            ? ($validated['secondary_phone_code'] ?? '') . $validated['secondary_phone']
+            : null;
 
-            $email = $this->buildEmail($validated);
-
-            $phone = null;
-
-            if (!empty($validated['phone'])) {
-                $phone = $validated['phone_code'] . $validated['phone'];
-            }
-
-            $secondaryPhone = null;
-
-            if (!empty($validated['secondary_phone'])) {
-                $secondaryPhone =
-                    $validated['secondary_phone_code'] .
-                    $validated['secondary_phone'];
-            }
-
-            $personnel = Personnel::create([
+        DB::transaction(function () use (
+            $validated,
+            $photoPath,
+            $email,
+            $phone,
+            $secondaryPhone
+        ) {
+            Personnel::create([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
-
                 'document_type' => $validated['document_type'],
                 'id_number' => $validated['id_number'],
-
                 'birth_date' => $validated['birth_date'],
                 'gender' => $validated['gender'],
                 'marital_status' => $validated['marital_status'],
-
                 'email' => $email,
                 'phone' => $phone,
                 'secondary_phone' => $secondaryPhone,
-
                 'address' => $validated['address'] ?? null,
-
-                'hire_date' => $validated['hire_date'],
-                'status' => 'active',
-
-                'photo' => $photoPath,
-                'curriculum' => $curriculumPath,
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Contactos de emergencia
-            |--------------------------------------------------------------------------
-            */
-
-            if (!empty($validated['emergency_contacts'])) {
-                foreach ($validated['emergency_contacts'] as $contact) {
-                    $phone = null;
-                    if (!empty($contact['phone'])) {
-                        $phone = $contact['phone_code'] . $contact['phone'];
-                    }
-                    $secondaryPhone = null;
-                    if (!empty($contact['secondary_phone'])) {
-                        $secondaryPhone = $contact['secondary_phone'];
-                    }
-                    $personnel->emergencyContacts()->create([
-                        'relationship_id' => $contact['relationship_id'],
-                        'name' => $contact['name'],
-                        'phone' => $phone,
-                        'secondary_phone' => $secondaryPhone,
-                    ]);
-                }
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Historial de cargo inicial
-            |--------------------------------------------------------------------------
-            */
-            $personnel->positionsHistory()->create([
                 'position_id' => $validated['position_id'],
-                'start_date' => $validated['hire_date'],
-                'end_date' => null,
+                'status' => 'active',
+                'photo' => $photoPath,
             ]);
         });
 
-        return redirect()->route('personnel.index');
+        return redirect()
+            ->route('personnel.index')
+            ->with('success', 'Personal registrado correctamente.');
     }
 
     /*------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -160,25 +115,12 @@ class PersonnelController extends Controller
     public function show(Personnel $personnel)
     {
         $personnel->load([
-            'positionsHistory.position',
-            'emergencyContacts.relationship',
+            'position',
             'user.roles',
         ]);
 
-        $currentPosition = $personnel->positionsHistory()
-            ->whereNull('end_date')
-            ->with('position')
-            ->first();
-
-        $history = $personnel->positionsHistory()
-            ->with('position')
-            ->latest('start_date')
-            ->get();
-
         return Inertia::render('Personnel/Show', [
             'personnel' => $personnel,
-            'current_position' => $currentPosition,
-            'history' => $history,
         ]);
     }
 
@@ -186,160 +128,79 @@ class PersonnelController extends Controller
 
     public function edit(Personnel $personnel)
     {
-        $currentPosition = $personnel->positionsHistory()
-            ->whereNull('end_date')
-            ->first();
-
         $positions = Position::where('active', true)->get();
 
+        // Si el cargo actual está inactivo, se conserva como opción.
         if (
-            $currentPosition &&
-            !$positions->contains('id', $currentPosition->position_id)
+            $personnel->position &&
+            !$positions->contains('id', $personnel->position->id)
         ) {
-            $positions->push(
-                Position::find($currentPosition->position_id)
-            );
+            $positions->push($personnel->position);
         }
 
-        $personnel->load('emergencyContacts');
-        $emergencyRelationships = EmergencyContactRelationship::all();
-
         return Inertia::render('Personnel/Edit', [
-            'personnel' => $personnel,
+            'personnel' => $personnel->load('position'),
             'positions' => $positions,
-            'current_position_id' => $currentPosition?->position_id,
-            'emergencyRelationships' => $emergencyRelationships,
         ]);
     }
 
     /*------------------------------------------------------------------------------------------------------------------------------------------*/
 
-    public function update(UpdatePersonnelRequest $request, Personnel $personnel)
-    {
+    public function update( UpdatePersonnelRequest $request, Personnel $personnel ) {
         $validated = $request->validated();
 
         $email = $this->buildEmail($validated);
 
-        $phone = $validated['phone']
-            ? $validated['phone_code'] . $validated['phone']
+        $phone = !empty($validated['phone'])
+            ? ($validated['phone_code'] ?? '') . $validated['phone']
             : null;
 
-        $secondaryPhone = null;
-
-        if (!empty($validated['secondary_phone'])) {
-            $secondaryPhone =
-                $validated['secondary_phone_code'] .
-                $validated['secondary_phone'];
-        }
+        $secondaryPhone = !empty($validated['secondary_phone'])
+            ? ($validated['secondary_phone_code'] ?? '') . $validated['secondary_phone']
+            : null;
 
         $photoPath = $personnel->photo;
-        $curriculumPath = $personnel->curriculum;
 
         if ($request->boolean('photo_remove')) {
-            if ($personnel->photo) {
-
-                Storage::disk('public')
-                    ->delete($personnel->photo);
+            if ($photoPath) {
+                Storage::disk('public')->delete($photoPath);
             }
+
             $photoPath = null;
         }
 
-        if ($request->boolean('curriculum_remove')) {
-            if ($personnel->curriculum) {
-                Storage::disk('public')
-                    ->delete($personnel->curriculum);
-            }
-            $curriculumPath = null;
-        }
-
         if ($request->hasFile('photo')) {
-            if ($personnel->photo) {
-
-                Storage::disk('public')
-                    ->delete($personnel->photo);
-
+            if ($photoPath) {
+                Storage::disk('public')->delete($photoPath);
             }
+
             $photoPath = $request->file('photo')
                 ->store('personnel/photos', 'public');
         }
 
-        if ($request->hasFile('curriculum')) {
-            if ($personnel->curriculum) {
-
-                Storage::disk('public')
-                    ->delete($personnel->curriculum);
-            }
-            $curriculumPath = $request->file('curriculum')
-                ->store('personnel/curriculums', 'public');
-        }
-
-        DB::transaction(function () use ( $personnel, $validated, $email, $phone, $secondaryPhone, $photoPath, $curriculumPath ) {
-
+        DB::transaction(function () use (
+            $personnel,
+            $validated,
+            $email,
+            $phone,
+            $secondaryPhone,
+            &$photoPath
+        ) {
             $personnel->update([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
-
                 'document_type' => $validated['document_type'],
                 'id_number' => $validated['id_number'],
-
-                'email' => $email,
-
                 'birth_date' => $validated['birth_date'],
                 'gender' => $validated['gender'],
                 'marital_status' => $validated['marital_status'],
-
+                'email' => $email,
                 'phone' => $phone,
                 'secondary_phone' => $secondaryPhone,
-
                 'address' => $validated['address'] ?? null,
-
-                'hire_date' => $validated['hire_date'],
-
+                'position_id' => $validated['position_id'],
                 'photo' => $photoPath,
-                'curriculum' => $curriculumPath,
             ]);
-
-            $currentPosition = $personnel->positionsHistory()
-                ->whereNull('end_date')
-                ->first();
-
-            if (!$currentPosition || $currentPosition->position_id != $validated['position_id']) {
-
-                if ($currentPosition) {
-                    /** @var \App\Models\PersonnelPositionHistory|null $currentPosition */
-                    $currentPosition->update([
-                        'end_date' => now(),
-                    ]);
-                }
-
-                $personnel->positionsHistory()->create([
-                    'position_id' => $validated['position_id'],
-                    'start_date' => $validated['hire_date'],
-                    'end_date' => null,
-                ]);
-            }
-
-            $personnel->emergencyContacts()->delete();
-
-            if (!empty($validated['emergency_contacts'])) {
-
-                foreach ($validated['emergency_contacts'] as $contact) {
-
-                    $phone = null;
-
-                    if (!empty($contact['phone'])) {
-                        $phone = $contact['phone_code'] . $contact['phone'];
-                    }
-
-
-                    $personnel->emergencyContacts()->create([
-                        'relationship_id' => $contact['relationship_id'],
-                        'name' => $contact['name'],
-                        'phone' => $phone,
-                        'secondary_phone' => $contact['secondary_phone'] ?? null,
-                    ]);
-                }
-            }
         });
 
         return redirect()

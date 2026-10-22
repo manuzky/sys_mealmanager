@@ -17,11 +17,10 @@ interface Personnel {
     email: string | null;
     id_number: string;
     document_type: string;
-    positions_history?: {
-        position?: {
-            name: string;
-        };
-    }[];
+    position?: {
+        id: number;
+        name: string;
+    } | null;
 }
 
 interface Permission {

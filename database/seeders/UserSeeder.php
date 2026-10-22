@@ -11,16 +11,23 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $personnel = Personnel::where('id_number', '00000001')->firstOrFail();
+        $personnel = Personnel::where('id_number', '00000001')
+            ->firstOrFail();
 
-        $user = User::create([
-            'name' => $personnel->first_name . ' ' . $personnel->last_name,
+        $user = User::firstOrNew([
             'username' => 'admin',
-            'email' => $personnel->email,
-            'personnel_id' => $personnel->id,
-            'password' => Hash::make('123456789'),
         ]);
 
-        $user->assignRole('Super Admin');
+        $user->name = $personnel->full_name;
+        $user->email = $personnel->email;
+        $user->personnel_id = $personnel->id;
+        $user->active = true;
+
+        if (!$user->exists) {
+            $user->password = Hash::make('123456789');
+        }
+
+        $user->save();
+        $user->syncRoles(['Super Admin']);
     }
 }

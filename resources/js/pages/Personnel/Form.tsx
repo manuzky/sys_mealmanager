@@ -1,22 +1,10 @@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
 import { useState } from "react";
-import {
-    Eye,
-    FileText,
-    Trash2,
-    Camera,
-    Upload,
-    Info
-} from "lucide-react";
-import {
-    HoverCard,
-    HoverCardContent,
-    HoverCardTrigger,
-} from "@/components/ui/hover-card"
+import { Trash2, Camera, Info } from "lucide-react";
+import { HoverCard, HoverCardContent, HoverCardTrigger, } from "@/components/ui/hover-card"
 
 type PersonnelFormProps = {
     data: any;
@@ -25,32 +13,13 @@ type PersonnelFormProps = {
     processing: boolean;
     date: Date | undefined;
     setDate: (date: Date | undefined) => void;
-    hireDate: Date | undefined;
-    setHireDate: (date: Date | undefined) => void;
     positions: any[];
-    emergencyRelationships: any[];
     currentPhoto?: string | null;
-    currentCurriculum?: string | null;
     submitLabel?: string;
     onSubmit: (e: React.FormEvent) => void;
 };
 
-export default function Form({
-    data,
-    setData,
-    errors,
-    processing,
-    date,
-    setDate,
-    hireDate,
-    setHireDate,
-    positions,
-    emergencyRelationships,
-    currentPhoto,
-    currentCurriculum,
-    submitLabel = 'Guardar',
-    onSubmit,
-}: PersonnelFormProps) {
+export default function Form({ data, setData, errors, processing, date, setDate, positions, currentPhoto, submitLabel = 'Guardar', onSubmit, }: PersonnelFormProps) {
     const formatIdNumber = (value: string) => {
         const digits = value.replace(/\D/g, '');
 
@@ -73,15 +42,7 @@ export default function Form({
         return result;
     };
 
-    const [removeCurrentCurriculum, setRemoveCurrentCurriculum] = useState(false);
     const [removeCurrentPhoto, setRemoveCurrentPhoto] = useState(false);
-
-    const curriculumUrl =
-    data.curriculum instanceof File
-        ? URL.createObjectURL(data.curriculum)
-        : currentCurriculum && !removeCurrentCurriculum
-            ? `/storage/${currentCurriculum}`
-            : null;
 
     const previewUrl =
         data.photo instanceof File
@@ -90,45 +51,8 @@ export default function Form({
                 ? `/storage/${currentPhoto}`
                 : null;
 
-    const addEmergencyContact = () => {
-        setData('emergency_contacts', [
-            ...data.emergency_contacts,
-            {
-                relationship_id: '',
-                name: '',
-                phone_code: '0412',
-                phone: '',
-                secondary_phone_code: '0412',
-                secondary_phone: '',
-            }
-        ]);
-    };
-
-    const removeEmergencyContact = (index:number) => {
-        setData(
-            'emergency_contacts',
-            data.emergency_contacts.filter(
-                (_:any, i:number) => i !== index
-            )
-        );
-    };
-
-
-    const updateEmergencyContact = (
-        index:number,
-        field:string,
-        value:any
-    ) => {
-        const contacts = [...data.emergency_contacts];
-
-        contacts[index][field] = value;
-
-        setData('emergency_contacts', contacts);
-    };
-
     return (
         <form onSubmit={onSubmit} className="space-y-6">
-
             <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6 bg-muted/70">
                 <div className="border-b pb-3 mb-6">
                     <div className="flex items-center gap-2">
@@ -138,10 +62,7 @@ export default function Form({
 
                         <HoverCard openDelay={200}>
                             <HoverCardTrigger asChild>
-                                <button
-                                    type="button"
-                                    className="text-red-500 hover:text-red-600 transition-colors"
-                                >
+                                <button type="button" className="text-red-500 hover:text-red-600 transition-colors" >
                                     <Info className="h-4 w-4" />
                                 </button>
                             </HoverCardTrigger>
@@ -175,7 +96,6 @@ export default function Form({
                 </div>
 
                 <div className="grid grid-cols-12 gap-8">
-
                     {/* Foto */}
                     <div className="col-span-12 lg:col-span-3">
                         <label className="mb-2 block text-sm font-medium">
@@ -185,11 +105,7 @@ export default function Form({
                         <div className="rounded-lg border p-4">
                             <div className="flex flex-col items-center gap-2">
                                 {previewUrl ? (
-                                    <img
-                                        src={previewUrl}
-                                        alt="Vista previa"
-                                        className="h-50 w-50 rounded-full object-cover border"
-                                    />
+                                    <img src={previewUrl} alt="Vista previa" className="h-50 w-50 rounded-full object-cover border" />
                                 ) : (
                                     <div className="h-50 w-50 rounded-full border flex flex-col items-center justify-center text-muted-foreground">
                                         <Camera className="h-8 w-8 mb-2" />
@@ -204,12 +120,7 @@ export default function Form({
                                         <Input
                                             type="file"
                                             accept=".jpg,.jpeg,.png,.webp"
-                                            onChange={(e) =>
-                                                setData(
-                                                    'photo',
-                                                    e.target.files?.[0] ?? null
-                                                )
-                                            }
+                                            onChange={(e) => setData( 'photo', e.target.files?.[0] ?? null ) }
                                         />
                                     </div>
                                 ) : (
@@ -218,17 +129,7 @@ export default function Form({
                                             type="button"
                                             variant="destructive"
                                             size="sm"
-                                            onClick={() => {
-                                                setData(
-                                                    'photo',
-                                                    null
-                                                );
-                                                setData(
-                                                    'photo_remove',
-                                                    true
-                                                );
-                                                setRemoveCurrentPhoto(true);
-                                            }}
+                                            onClick={() => { setData( 'photo', null ); setData( 'photo_remove', true ); setRemoveCurrentPhoto(true); }}
                                         >
                                             <Trash2 className="h-4 w-4 mr-2" />
                                             Eliminar
@@ -238,11 +139,7 @@ export default function Form({
                             </div>
                         </div>
 
-                        {errors.photo && (
-                            <p className="text-sm text-red-500 mt-2">
-                                {errors.photo}
-                            </p>
-                        )}
+                        {errors.photo && (<p className="text-sm text-red-500 mt-2">{errors.photo}</p>)}
                     </div>
 
                     <div className="col-span-12 lg:col-span-9">
@@ -253,17 +150,9 @@ export default function Form({
                                 <label className="mb-2 block text-sm font-medium">
                                     Nombres(s) <span className="text-red-500">*</span>
                                 </label>
-                                <Input
-                                    placeholder="Nombre"
-                                    value={data.first_name}
-                                    onChange={(e) => setData('first_name', e.target.value)}
-                                />
+                                <Input placeholder="Nombre" value={data.first_name} onChange={(e) => setData('first_name', e.target.value)} />
 
-                                {errors.first_name && (
-                                    <p className="text-sm text-red-500 mt-1">
-                                        {errors.first_name}
-                                    </p>
-                                )}
+                                {errors.first_name && (<p className="text-sm text-red-500 mt-1">{errors.first_name}</p>)}
                             </div>
 
                             {/* Apellido */}
@@ -271,17 +160,9 @@ export default function Form({
                                 <label className="mb-2 block text-sm font-medium">
                                     Apellido(s) <span className="text-red-500">*</span>
                                 </label>
-                                <Input
-                                    placeholder="Apellido"
-                                    value={data.last_name}
-                                    onChange={(e) => setData('last_name', e.target.value)}
-                                />
+                                <Input placeholder="Apellido" value={data.last_name} onChange={(e) => setData('last_name', e.target.value)} />
 
-                                {errors.last_name && (
-                                    <p className="text-sm text-red-500 mt-1">
-                                        {errors.last_name}
-                                    </p>
-                                )}
+                                {errors.last_name && (<p className="text-sm text-red-500 mt-1">{errors.last_name}</p>)}
                             </div>
 
                             {/* Fecha de nacimiento */}
@@ -293,31 +174,19 @@ export default function Form({
                                 <DatePicker
                                     value={date}
                                     onChange={(value) => {
-
                                         setDate(value);
-
                                         if (!value) {
                                             setData('birth_date', '');
                                             return;
                                         }
-
                                         const year = value.getFullYear();
                                         const month = String(value.getMonth() + 1).padStart(2, '0');
                                         const day = String(value.getDate()).padStart(2, '0');
-
-                                        setData(
-                                            'birth_date',
-                                            `${year}-${month}-${day}`
-                                        );
-
+                                        setData('birth_date', `${year}-${month}-${day}`);
                                     }}
                                 />
 
-                                {errors.birth_date && (
-                                    <p className="text-sm text-red-500 mt-1">
-                                        {errors.birth_date}
-                                    </p>
-                                )}
+                                {errors.birth_date && (<p className="text-sm text-red-500 mt-1">{errors.birth_date}</p>)}
                             </div>
 
                             {/* Documento */}
@@ -328,12 +197,7 @@ export default function Form({
 
                                 <div className="flex">
 
-                                    <Select
-                                        value={data.document_type}
-                                        onValueChange={(value) =>
-                                            setData('document_type', value)
-                                        }
-                                    >
+                                    <Select value={data.document_type} onValueChange={(value) => setData('document_type', value)} >
                                         <SelectTrigger className="w-15 rounded-r-none border-r-0">
                                             <SelectValue />
                                         </SelectTrigger>
@@ -349,46 +213,27 @@ export default function Form({
                                         placeholder="Número de cédula"
                                         maxLength={15}
                                         value={formatIdNumber(data.id_number)}
-                                        onChange={(e) => {
-                                            const raw = e.target.value.replace(/\D/g, '');
-                                            setData('id_number', raw);
-                                        }}
+                                        onChange={(e) => {const raw = e.target.value.replace(/\D/g, ''); setData('id_number', raw); }}
                                     />
 
                                 </div>
 
-                                {errors.document_type && (
-                                    <p className="mt-1 text-sm text-red-500">
-                                        {errors.document_type}
-                                    </p>
-                                )}
-
-                                {errors.id_number && (
-                                    <p className="mt-1 text-sm text-red-500">
-                                        {errors.id_number}
-                                    </p>
-                                )}
+                                {errors.document_type && (<p className="mt-1 text-sm text-red-500">{errors.document_type}</p>)}
+                                {errors.id_number && (<p className="mt-1 text-sm text-red-500">{errors.id_number}</p>)}
                             </div>
 
                             {/* Sexo */}
                             <div>
-
                                 <label className="mb-2 block text-sm font-medium">
                                     Sexo <span className="text-red-500">*</span>
                                 </label>
 
-                                <Select
-                                    value={data.gender}
-                                    onValueChange={(value) =>
-                                        setData('gender', value)
-                                    }
-                                >
+                                <Select value={data.gender} onValueChange={(value) => setData('gender', value)} >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Seleccione..." />
                                     </SelectTrigger>
 
                                     <SelectContent>
-
                                         <SelectItem value="male">
                                             Masculino
                                         </SelectItem>
@@ -396,38 +241,25 @@ export default function Form({
                                         <SelectItem value="female">
                                             Femenino
                                         </SelectItem>
-
                                     </SelectContent>
 
                                 </Select>
 
-                                {errors.gender && (
-                                    <p className="text-sm text-red-500 mt-1">
-                                        {errors.gender}
-                                    </p>
-                                )}
-
+                                {errors.gender && (<p className="text-sm text-red-500 mt-1">{errors.gender}</p>)}
                             </div>
 
                             {/* Estado civil */}
                             <div>
-
                                 <label className="mb-2 block text-sm font-medium">
                                     Estado civil <span className="text-red-500">*</span>
                                 </label>
 
-                                <Select
-                                    value={data.marital_status}
-                                    onValueChange={(value) =>
-                                        setData('marital_status', value)
-                                    }
-                                >
+                                <Select value={data.marital_status} onValueChange={(value) => setData('marital_status', value)}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Seleccione..." />
                                     </SelectTrigger>
 
                                     <SelectContent>
-
                                         <SelectItem value="single">
                                             Soltero(a)
                                         </SelectItem>
@@ -443,33 +275,39 @@ export default function Form({
                                         <SelectItem value="widowed">
                                             Viudo(a)
                                         </SelectItem>
-
                                     </SelectContent>
-
                                 </Select>
 
-                                {errors.marital_status && (
-                                    <p className="text-sm text-red-500 mt-1">
-                                        {errors.marital_status}
-                                    </p>
-                                )}
+                                {errors.marital_status && (<p className="text-sm text-red-500 mt-1">{errors.marital_status}</p>)}
+                            </div>
 
+                            {/* Cargo */}
+                            <div>
+                                <label className="mb-2 block text-sm font-medium">
+                                    Cargo <span className="text-red-500">*</span>
+                                </label>
+
+                                <Select value={data.position_id ? String(data.position_id) : ''} onValueChange={(value) => setData('position_id', value)} >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Seleccione un cargo" />
+                                    </SelectTrigger>
+
+                                    <SelectContent>
+                                        {positions.map((position) => (
+                                            <SelectItem key={position.id} value={String(position.id)}>
+                                                {position.name}
+                                                {!position.active && ' 🔒'}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
+                                {errors.position_id && (<p className="text-sm text-red-500 mt-1">{errors.position_id}</p>)}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-
-
-
-
-
-
-
-
-
-
 
 
             {/* ===================== CONTACTO ===================== */}
@@ -488,34 +326,19 @@ export default function Form({
                 <div className="grid grid-cols-1 lg:grid-cols-[2fr_1.5fr_1.5fr] gap-x-8 gap-y-5">
                     {/* Correo */}
                     <div>
-
                         <label className="mb-2 block text-sm font-medium">
                             Correo electrónico <span className="text-red-500">*</span>
                         </label>
 
                         <div className="flex">
+                            <Input className="flex-1 rounded-r-none" placeholder="usuario" value={data.email_local} onChange={(e) => setData('email_local', e.target.value)} />
 
-                            <Input
-                                className="flex-1 rounded-r-none"
-                                placeholder="usuario"
-                                value={data.email_local}
-                                onChange={(e) =>
-                                    setData('email_local', e.target.value)
-                                }
-                            />
-
-                            <Select
-                                value={data.email_domain}
-                                onValueChange={(value) =>
-                                    setData('email_domain', value)
-                                }
-                            >
+                            <Select value={data.email_domain} onValueChange={(value) => setData('email_domain', value)} >
                                 <SelectTrigger className="w-35 rounded-l-none border-l-0">
                                     <SelectValue />
                                 </SelectTrigger>
 
                                 <SelectContent>
-
                                     <SelectItem value="@gmail.com">
                                         @gmail.com
                                     </SelectItem>
@@ -531,55 +354,31 @@ export default function Form({
                                     <SelectItem value="other">
                                         Otro...
                                     </SelectItem>
-
                                 </SelectContent>
-
                             </Select>
-
                         </div>
 
                         {data.email_domain === 'other' && (
-
                             <div className="mt-2">
-
                                 <Input
                                     placeholder="@empresa.com"
                                     value={data.email_custom_domain}
-                                    onChange={(e) =>
-                                        setData(
-                                            'email_custom_domain',
-                                            e.target.value
-                                        )
-                                    }
+                                    onChange={(e) => setData('email_custom_domain', e.target.value)}
                                 />
-
                             </div>
-
                         )}
 
-                        {errors.email_local && (
-                            <p className="mt-1 text-sm text-red-500">
-                                {errors.email_local}
-                            </p>
-                        )}
-
+                        {errors.email_local && (<p className="mt-1 text-sm text-red-500">{errors.email_local}</p>)}
                     </div>
 
                     {/* Teléfono principal */}
                     <div>
-
                         <label className="mb-2 block text-sm font-medium">
                             Teléfono principal <span className="text-red-500">*</span>
                         </label>
 
                         <div className="flex">
-
-                            <Select
-                                value={data.phone_code}
-                                onValueChange={(value) =>
-                                    setData('phone_code', value)
-                                }
-                            >
+                            <Select value={data.phone_code} onValueChange={(value) => setData('phone_code', value)} >
                                 <SelectTrigger className="w-20 rounded-r-none border-r-0 focus:z-10">
                                     <SelectValue />
                                 </SelectTrigger>
@@ -599,37 +398,21 @@ export default function Form({
                                 placeholder="123.45.67"
                                 maxLength={9}
                                 value={formatPhone(data.phone)}
-                                onChange={(e) => {
-                                    const raw = e.target.value.replace(/\D/g, '').slice(0, 7);
-                                    setData('phone', raw);
-                                }}
+                                onChange={(e) => { const raw = e.target.value.replace(/\D/g, '').slice(0, 7); setData('phone', raw); }}
                             />
-
                         </div>
 
-                        {errors.phone && (
-                            <p className="mt-1 text-sm text-red-500">
-                                {errors.phone}
-                            </p>
-                        )}
-
+                        {errors.phone && (<p className="mt-1 text-sm text-red-500">{errors.phone}</p>)}
                     </div>
 
                     {/* Segundo teléfono */}
                     <div>
-
                         <label className="mb-2 block text-sm font-medium">
                             Segundo teléfono
                         </label>
 
                         <div className="flex">
-
-                            <Select
-                                value={data.secondary_phone_code}
-                                onValueChange={(value) =>
-                                    setData('secondary_phone_code', value)
-                                }
-                            >
+                            <Select value={data.secondary_phone_code} onValueChange={(value) => setData('secondary_phone_code', value)} >
                                 <SelectTrigger className="w-20 rounded-r-none border-r-0 focus:z-10">
                                     <SelectValue />
                                 </SelectTrigger>
@@ -649,27 +432,16 @@ export default function Form({
                                 placeholder="123.45.67"
                                 maxLength={9}
                                 value={formatPhone(data.secondary_phone)}
-                                onChange={(e) => {
-                                    const raw = e.target.value.replace(/\D/g, '').slice(0, 7);
-                                    setData('secondary_phone', raw);
-                                }}
+                                onChange={(e) => { const raw = e.target.value.replace(/\D/g, '').slice(0, 7); setData('secondary_phone', raw);}}
                             />
-
                         </div>
 
-                        {errors.secondary_phone && (
-                            <p className="mt-1 text-sm text-red-500">
-                                {errors.secondary_phone}
-                            </p>
-                        )}
-
+                        {errors.secondary_phone && (<p className="mt-1 text-sm text-red-500">{errors.secondary_phone}</p>)}
                     </div>
-
                 </div>
 
                 {/* Dirección */}
                 <div>
-
                     <label className="mb-2 block text-sm font-medium">
                         Dirección
                     </label>
@@ -677,411 +449,13 @@ export default function Form({
                     <Input
                         placeholder="Dirección"
                         value={data.address}
-                        onChange={(e) =>
-                            setData('address', e.target.value)
-                        }
+                        onChange={(e) => setData('address', e.target.value)}
                     />
 
-                    {errors.address && (
-                        <p className="text-sm text-red-500 mt-1">
-                            {errors.address}
-                        </p>
-                    )}
-
-                </div>
-                <br />
-                {/* Contactos de emergencia */}
-                <div className="border-b pb-3 mb-6">
-                    <p className="text-sm text-muted-foreground">
-                        Contacto(s) de emergencia.
-                    </p>
-                </div>
-
-                <div className="space-y-4">
-                    {data.emergency_contacts.map((contact:any, index:number) => (
-
-                        <div 
-                            key={index}
-                            className="grid grid-cols-1 lg:grid-cols-[2fr_120px_1.5fr_1.5fr] gap-x-8 gap-y-5 items-end"
-                        >
-
-                            {/* Nombre */}
-                            <div>
-                                <label className="mb-2 block text-sm font-medium">
-                                    Nombre completo
-                                </label>
-
-                                <Input
-                                    placeholder="Nombre del contacto"
-                                    value={contact.name}
-                                    onChange={(e) =>
-                                        updateEmergencyContact(
-                                            index,
-                                            'name',
-                                            e.target.value
-                                        )
-                                    }
-                                />
-                            </div>
-
-                            {/* Parentesco */}
-                            <div>
-                                <label className="mb-2 block text-sm font-medium">
-                                    Parentesco
-                                </label>
-
-                                <Select
-                                    value={
-                                        contact.relationship_id
-                                        ? String(contact.relationship_id)
-                                        : ''
-                                    }
-                                    onValueChange={(value) =>
-                                        updateEmergencyContact(
-                                            index,
-                                            'relationship_id',
-                                            value
-                                        )
-                                    }
-                                >
-
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Seleccione" />
-                                    </SelectTrigger>
-
-                                    <SelectContent>
-                                        {emergencyRelationships.map((item) => (
-                                            <SelectItem
-                                                key={item.id}
-                                                value={String(item.id)}
-                                            >
-                                                {item.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {/* Teléfono */}
-                            <div>
-                                <label className="mb-2 block text-sm font-medium">
-                                    Teléfono
-                                </label>
-
-                                <div className="flex">
-                                    <Select
-                                        value={contact.phone_code}
-                                        onValueChange={(value) =>
-                                            updateEmergencyContact(
-                                                index,
-                                                'phone_code',
-                                                value
-                                            )
-                                        }
-                                    >
-
-                                        <SelectTrigger className="w-20 rounded-r-none border-r-0">
-                                            <SelectValue />
-                                        </SelectTrigger>
-
-                                        <SelectContent>
-                                            <SelectItem value="0412">0412</SelectItem>
-                                            <SelectItem value="0414">0414</SelectItem>
-                                            <SelectItem value="0416">0416</SelectItem>
-                                            <SelectItem value="0422">0422</SelectItem>
-                                            <SelectItem value="0424">0424</SelectItem>
-                                            <SelectItem value="0426">0426</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-
-                                    <Input
-                                        className="flex-1 rounded-l-none"
-                                        placeholder="123.45.67"
-                                        value={formatPhone(contact.phone)}
-                                        onChange={(e)=> {
-                                            const raw = e.target.value
-                                                .replace(/\D/g,'')
-                                                .slice(0,7);
-
-                                            updateEmergencyContact(
-                                                index,
-                                                'phone',
-                                                raw
-                                            );
-                                        }}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Segundo teléfono */}
-                            <div>
-                                <label className="mb-2 block text-sm font-medium">
-                                    Segundo teléfono
-                                </label>
-
-                                <div className="flex gap-2">
-
-                                    <Input
-                                        className="flex-1"
-                                        placeholder="Ej: +1 555 1234567"
-                                        value={contact.secondary_phone}
-                                        onChange={(e) =>
-                                            updateEmergencyContact(
-                                                index,
-                                                'secondary_phone',
-                                                e.target.value
-                                            )
-                                        }
-                                    />
-
-
-                                    {data.emergency_contacts.length > 1 && (
-                                        <Button
-                                            type="button"
-                                            variant="destructive"
-                                            size="icon"
-                                            onClick={() => removeEmergencyContact(index)}
-                                            title="Eliminar contacto"
-                                        >
-                                            <Trash2 className="h-4 w-4"/>
-                                        </Button>
-                                    )}
-
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={addEmergencyContact}
-                    >
-                        Agregar contacto de emergencia
-                    </Button>
+                    {errors.address && (<p className="text-sm text-red-500 mt-1">{errors.address}</p>)}
                 </div>
             </div>
 
-
-
-
-
-
-
-
-
-
-            {/* ===================== INFORMACIÓN LABORAL ===================== */}
-            <br />
-            <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6 bg-muted/70">
-                <div className="border-b pb-3 mb-6">
-                    <h2 className="text-lg font-semibold">
-                        Información laboral
-                    </h2>
-
-                    <p className="text-sm text-muted-foreground">
-                        Datos relacionados con el ingreso y el cargo del trabajador.
-                    </p>
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-5">
-                    {/* Cargo */}
-                    <div>
-
-                        <label className="mb-2 block text-sm font-medium">
-                            Cargo <span className="text-red-500">*</span>
-                        </label>
-
-                        <Select
-                            value={
-                                data.position_id
-                                    ? String(data.position_id)
-                                    : ''
-                            }
-                            onValueChange={(value) =>
-                                setData('position_id', value)
-                            }
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Seleccione un cargo" />
-                            </SelectTrigger>
-
-                            <SelectContent>
-
-                                {positions.map((position) => (
-
-                                    <SelectItem
-                                        key={position.id}
-                                        value={String(position.id)}
-                                    >
-                                        {position.name}
-
-                                        {!position.active && ' 🔒'}
-
-                                    </SelectItem>
-
-                                ))}
-
-                            </SelectContent>
-
-                        </Select>
-
-                        {errors.position_id && (
-                            <p className="text-sm text-red-500 mt-1">
-                                {errors.position_id}
-                            </p>
-                        )}
-                    </div>
-                    
-                    {/* Fecha de ingreso */}
-                    <div>
-
-                        <label className="mb-2 block text-sm font-medium">
-                            Fecha de ingreso <span className="text-red-500">*</span>
-                        </label>
-
-                        <DatePicker
-                            value={hireDate}
-                            onChange={(value) => {
-
-                                setHireDate(value);
-
-                                if (!value) {
-                                    setData('hire_date', '');
-                                    return;
-                                }
-
-                                const year = value.getFullYear();
-                                const month = String(value.getMonth() + 1).padStart(2, '0');
-                                const day = String(value.getDate()).padStart(2, '0');
-
-                                setData(
-                                    'hire_date',
-                                    `${year}-${month}-${day}`
-                                );
-
-                            }}
-                        />
-
-                        {errors.hire_date && (
-                            <p className="text-sm text-red-500 mt-1">
-                                {errors.hire_date}
-                            </p>
-                        )}
-
-                    </div>
-
-                    {/* Curriculum */}
-                    <div>
-                        <label className="mb-2 block text-sm font-medium">
-                            Currículum (PDF)
-                        </label>
-
-                        {!curriculumUrl ? (
-                            <div className="rounded-lg border-2 border-dashed p-6">
-                                <div className="flex flex-col items-center gap-3">
-                                    <Upload className="h-8 w-8 text-muted-foreground" />
-
-                                    <div className="text-center">
-                                        <p className="font-medium">
-                                            Seleccione el currículum
-                                        </p>
-
-                                        <p className="text-sm text-muted-foreground">
-                                            Solo archivos PDF.
-                                        </p>
-                                    </div>
-
-                                    <Input
-                                        type="file"
-                                        accept=".pdf"
-                                        className="max-w-sm"
-                                        onChange={(e) =>
-                                            setData(
-                                                "curriculum",
-                                                e.target.files?.[0] ?? null
-                                            )
-                                        }
-                                    />
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="rounded-lg border p-4">
-                                <div className="flex items-center justify-between">
-
-                                    <div className="flex items-center gap-3">
-                                        <FileText className="h-8 w-8" />
-
-                                        <div>
-
-                                            <p className="font-medium truncate max-w-xs">
-                                                {
-                                                    data.curriculum instanceof File
-                                                        ? data.curriculum.name
-                                                        : currentCurriculum?.split('/').pop()
-                                                }
-                                            </p>
-
-                                            <p className="text-sm text-muted-foreground">
-                                                {
-                                                    data.curriculum instanceof File
-                                                        ? `${(data.curriculum.size / 1024).toFixed(1)} KB`
-                                                        : 'Archivo guardado'
-                                                }
-                                            </p>
-
-                                        </div>
-                                    </div>
-
-
-                                    <div className="flex gap-2">
-
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="icon"
-                                            title="Ver archivo"
-                                            onClick={() =>
-                                                window.open(
-                                                    curriculumUrl,
-                                                    "_blank"
-                                                )
-                                            }
-                                        >
-                                            <Eye className="h-4 w-4" />
-                                        </Button>
-
-
-                                        <Button
-                                            type="button"
-                                            variant="destructive"
-                                            size="icon"
-                                            title="Eliminar archivo"
-                                            onClick={() => {
-                                                setData("curriculum", null);
-                                                setData(
-                                                    "curriculum_remove",
-                                                    true
-                                                );
-                                                setRemoveCurrentCurriculum(true);
-                                            }}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-
-                                    </div>
-
-                                </div>
-                            </div>
-                        )}
-
-                        {errors.curriculum && (
-                            <p className="mt-2 text-sm text-red-500">
-                                {errors.curriculum}
-                            </p>
-                        )}
-                    </div>
-                </div>
-            </div>
 
             {/* Botón */}
             <div className="flex justify-end gap-3 pt-6 border-t">
@@ -1093,10 +467,7 @@ export default function Form({
                     Cancelar
                 </Button>
 
-                <Button
-                    type="submit"
-                    disabled={processing}
-                >
+                <Button type="submit" disabled={processing}>
                     {processing ? 'Guardando...' : submitLabel}
                 </Button>
             </div>

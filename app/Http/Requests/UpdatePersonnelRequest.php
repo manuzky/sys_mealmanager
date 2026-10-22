@@ -17,7 +17,6 @@ class UpdatePersonnelRequest extends FormRequest
         $personnelId = $this->route('personnel')->id;
 
         return [
-
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
 
@@ -43,39 +42,8 @@ class UpdatePersonnelRequest extends FormRequest
             'secondary_phone_code' => ['nullable', 'string'],
             'secondary_phone' => ['nullable', 'digits:7'],
 
-            'emergency_contacts' => [
-                'nullable',
-                'array'
-            ],
-
-            'emergency_contacts.*.relationship_id' => [
-                'required',
-                'exists:emergency_contact_relationships,id'
-            ],
-
-            'emergency_contacts.*.name' => [
-                'required',
-                'string'
-            ],
-
-            'emergency_contacts.*.phone_code' => [
-                'required',
-                'string'
-            ],
-
-            'emergency_contacts.*.phone' => [
-                'required',
-                'digits:7'
-            ],
-
-            'emergency_contacts.*.secondary_phone' => [
-                'nullable',
-                'string'
-            ],
-
             'address' => ['nullable', 'string'],
 
-            'hire_date' => ['required', 'date'],
             'position_id' => ['required', 'exists:positions,id'],
 
             'photo' => [
@@ -85,20 +53,7 @@ class UpdatePersonnelRequest extends FormRequest
                 'max:2048',
             ],
 
-            'curriculum' => [
-                'nullable',
-                'file',
-                'mimes:pdf',
-                'max:5120',
-            ],
-
-            'photo_remove' => [
-                'boolean',
-            ],
-
-            'curriculum_remove' => [
-                'boolean',
-            ],
+            'photo_remove' => ['boolean'],
         ];
     }
 }

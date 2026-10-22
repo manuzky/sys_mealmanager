@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use App\Models\User;
-use App\Models\Personnel;
-use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Models\Personnel;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Inertia\Inertia;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -20,27 +20,28 @@ class UserController extends Controller
         $this->middleware('permission:users.view')->only(['index', 'show']);
         $this->middleware('permission:users.create')->only(['create', 'store']);
         $this->middleware('permission:users.edit')->only(['edit', 'update']);
-        // $this->middleware('permission:users.delete')->only(['destroy']);
         $this->middleware('permission:users.toggle-status')->only(['toggleStatus']);
     }
-    
+
     /*------------------------------------------------------------------------------------------------------------------------------------------*/
-    
+
     public function index(Request $request)
     {
         $search = $request->search;
 
-        $users = User::with('personnel')
+        $users = User::with('personnel.position')
             ->when($search, function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('username', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhereHas('personnel', function ($q) use ($search) {
-                        $q->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%");
-                    });
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhereHas('personnel', function ($query) use ($search) {
+                            $query->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%");
+                        });
+                });
             })
-            ->orderBy('id', 'desc')
+            ->orderByDesc('id')
             ->paginate(10)
             ->withQueryString();
 
@@ -58,38 +59,15 @@ class UserController extends Controller
     public function create()
     {
         $personnels = Personnel::query()
-            ->with([ 'positionsHistory.position' ])
+            ->with('position')
             ->whereDoesntHave('user')
             ->orderBy('first_name')
             ->get();
 
-        $roles = Role::with('permissions')
-            ->orderBy('name')
-            ->get();
-
-        $permissions = Permission::orderBy('name')
-            ->get(['id', 'name', 'display_name']);
-
-        $permissionGroups = $permissions
-            ->groupBy(function ($permission) {
-                return ucfirst(
-                    explode('.', $permission->name)[0]
-                );
-            })
-            ->map(function ($permissions, $group) {
-
-                return [
-                    'name' => $group,
-                    'permissions' => $permissions->values(),
-                ];
-
-            })
-            ->values();
-
         return Inertia::render('Users/Create', [
             'personnels' => $personnels,
-            'roles' => $roles,
-            'permissionGroups' => $permissionGroups,
+            'roles' => Role::with('permissions')->orderBy('name')->get(),
+            'permissionGroups' => $this->getPermissionGroups(),
         ]);
     }
 
@@ -98,10 +76,9 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         $validated = $request->validated();
-
         $personnel = Personnel::findOrFail($validated['personnel_id']);
 
-        if ($personnel->user) {
+        if ($personnel->user()->exists()) {
             return back()
                 ->withErrors([
                     'personnel_id' => 'Esta persona ya tiene un usuario asignado.',
@@ -118,9 +95,7 @@ class UserController extends Controller
             'active' => true,
         ]);
 
-        // Asignar rol
         $user->assignRole($validated['role']);
-        // Asignar permisos adicionales (si existen)
         $user->givePermissionTo($validated['permissions'] ?? []);
 
         return redirect()
@@ -133,16 +108,11 @@ class UserController extends Controller
     public function show(User $user)
     {
         $user->load([
-            'personnel.positionsHistory.position',
+            'personnel.position',
             'roles',
         ]);
 
-        $currentPosition = optional(
-            $user->personnel?->positionsHistory()
-                ->with('position')
-                ->latest('start_date')
-                ->first()
-        )->position;
+        $personnel = $user->personnel;
 
         return Inertia::render('Users/Show', [
             'user' => [
@@ -153,18 +123,18 @@ class UserController extends Controller
                 'created_at' => $user->created_at?->format('d/m/Y H:i'),
                 'roles' => $user->getRoleNames(),
 
-                'personnel' => $user->personnel ? [
-                    'id' => $user->personnel->id,
-                    'first_name' => $user->personnel->first_name,
-                    'last_name' => $user->personnel->last_name,
-                    'full_name' => $user->personnel->full_name,
-                    'email' => $user->personnel->email,
-                    'document_type' => $user->personnel->document_type,
-                    'id_number' => $user->personnel->id_number,
-                    'phone' => $user->personnel->phone,
-                    'status' => $user->personnel->status,
-                    'photo' => $user->personnel->photo,
-                    'position' => $currentPosition?->name,
+                'personnel' => $personnel ? [
+                    'id' => $personnel->id,
+                    'first_name' => $personnel->first_name,
+                    'last_name' => $personnel->last_name,
+                    'full_name' => $personnel->full_name,
+                    'email' => $personnel->email,
+                    'document_type' => $personnel->document_type,
+                    'id_number' => $personnel->id_number,
+                    'phone' => $personnel->phone,
+                    'status' => $personnel->status,
+                    'photo' => $personnel->photo,
+                    'position' => $personnel->position?->name,
                 ] : null,
             ],
         ]);
@@ -174,18 +144,10 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $user->load([
-            'personnel',
-            'roles',
-        ]);
+        $user->load(['personnel', 'roles']);
 
         $personnels = Personnel::query()
-            ->with([
-                'positionsHistory' => function ($query) {
-                    $query->whereNull('end_date');
-                },
-                'positionsHistory.position',
-            ])
+            ->with('position')
             ->where(function ($query) use ($user) {
                 $query->whereDoesntHave('user')
                     ->orWhere('id', $user->personnel_id);
@@ -193,40 +155,13 @@ class UserController extends Controller
             ->orderBy('first_name')
             ->get();
 
-        $permissions = Permission::orderBy('name')
-            ->get(['id', 'name', 'display_name']);
-
-        $permissionGroups = $permissions
-            ->groupBy(function ($permission) {
-                return ucfirst(
-                    explode('.', $permission->name)[0]
-                );
-            })
-            ->map(function ($permissions, $group) {
-                return [
-                    'name' => $group,
-                    'permissions' => $permissions->values(),
-                ];
-            })
-            ->values();
-
         return Inertia::render('Users/Edit', [
             'user' => $user,
-
             'personnels' => $personnels,
-
-            'roles' => Role::with('permissions')
-                ->orderBy('name')
-                ->get(),
-
-            'permissionGroups' => $permissionGroups,
-
-            'userRoles' => $user
-                ->getRoleNames()
-                ->toArray(),
-
-            'userPermissions' => $user
-                ->getDirectPermissions()
+            'roles' => Role::with('permissions')->orderBy('name')->get(),
+            'permissionGroups' => $this->getPermissionGroups(),
+            'userRoles' => $user->getRoleNames()->toArray(),
+            'userPermissions' => $user->getDirectPermissions()
                 ->pluck('name')
                 ->values(),
         ]);
@@ -237,48 +172,43 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user)
     {
         $validated = $request->validated();
+        $personnel = Personnel::findOrFail($validated['personnel_id']);
 
-        $newPersonnel = Personnel::findOrFail(
-            $validated['personnel_id']
-        );
+        if ($personnel->user()->where('id', '!=', $user->id)->exists()) {
+            return back()
+                ->withErrors([
+                    'personnel_id' => 'Esta persona ya tiene otro usuario asignado.',
+                ])
+                ->withInput();
+        }
 
-        $user->personnel_id = $newPersonnel->id;
+        $user->personnel_id = $personnel->id;
+        $user->name = trim($personnel->first_name . ' ' . $personnel->last_name);
+        $user->email = $personnel->email;
         $user->username = $validated['username'];
 
         if (
             !empty($validated['change_password']) &&
             !empty($validated['password'])
         ) {
-            $user->password = Hash::make(
-                $validated['password']
-            );
+            $user->password = Hash::make($validated['password']);
         }
 
         $user->save();
 
-        // Rol
-        $user->syncRoles([
-            $validated['role']
-        ]);
-
-        // Permisos adicionales
-        $user->syncPermissions(
-            $validated['permissions'] ?? []
-        );
+        $user->syncRoles([$validated['role']]);
+        $user->syncPermissions($validated['permissions'] ?? []);
 
         return redirect()
             ->route('users.index')
-            ->with(
-                'success',
-                'Usuario actualizado correctamente.'
-            );
+            ->with('success', 'Usuario actualizado correctamente.');
     }
 
     /*------------------------------------------------------------------------------------------------------------------------------------------*/
 
     public function destroy(User $user)
     {
-        //
+        // La eliminación de usuarios queda pendiente de definir.
     }
 
     /*------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -287,13 +217,27 @@ class UserController extends Controller
     {
         if ($user->id === Auth::id()) {
             return back()->withErrors([
-                'error' => 'No puedes deshabilitar tu propio usuario.'
+                'error' => 'No puedes deshabilitar tu propio usuario.',
             ]);
         }
 
-        $user->active = ! $user->active;
+        $user->active = !$user->active;
         $user->save();
 
         return back()->with('success', 'Estado del usuario actualizado correctamente.');
+    }
+
+    /*------------------------------------------------------------------------------------------------------------------------------------------*/
+
+    private function getPermissionGroups()
+    {
+        return Permission::orderBy('name')
+            ->get(['id', 'name', 'display_name'])
+            ->groupBy(fn ($permission) => ucfirst(explode('.', $permission->name)[0]))
+            ->map(fn ($permissions, $group) => [
+                'name' => $group,
+                'permissions' => $permissions->values(),
+            ])
+            ->values();
     }
 }

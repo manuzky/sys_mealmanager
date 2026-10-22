@@ -3,45 +3,35 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\PersonnelPositionHistory;
-use App\Models\PersonnelEmergencyContact;
 
 class Personnel extends Model
 {
     protected $fillable = [
         'first_name',
         'last_name',
-
-        // Documento
         'document_type',
         'id_number',
-
-        // Correo
-        'email',
-
-        // Datos personales
         'birth_date',
         'gender',
         'marital_status',
-
-        // Contacto
+        'email',
         'phone',
         'secondary_phone',
         'address',
-
-        // Laboral
-        'hire_date',
+        'position_id',
         'status',
-
-        // Archivos
         'photo',
-        'curriculum',
     ];
 
-    protected static function booted()
-    {
-        static::updated(function ($personnel) {
+    protected $casts = [
+        'birth_date' => 'date:Y-m-d',
+    ];
 
+    protected $appends = ['full_name'];
+
+    protected static function booted(): void
+    {
+        static::updated(function (Personnel $personnel) {
             $personnel->loadMissing('user');
 
             if (!$personnel->user) {
@@ -67,14 +57,7 @@ class Personnel extends Model
         });
     }
 
-    protected $casts = [
-        'birth_date' => 'date:Y-m-d',
-        'hire_date' => 'date:Y-m-d',
-    ];
-    
-    protected $appends = ['full_name'];
-
-    public function getFullNameAttribute()
+    public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
     }
@@ -84,15 +67,8 @@ class Personnel extends Model
         return $this->hasOne(User::class);
     }
 
-    public function positionsHistory()
+    public function position()
     {
-        return $this->hasMany(PersonnelPositionHistory::class, 'personnel_id');
-    }
-
-    public function emergencyContacts()
-    {
-        return $this->hasMany(
-            PersonnelEmergencyContact::class
-        );
+        return $this->belongsTo(Position::class);
     }
 }
