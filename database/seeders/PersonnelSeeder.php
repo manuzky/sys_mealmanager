@@ -10,10 +10,8 @@ class PersonnelSeeder extends Seeder
 {
     public function run(): void
     {
-        $adminPosition = Position::where(
-            'name',
-            'Administrador del Sistema'
-        )->firstOrFail();
+        $adminPosition = Position::where('name','Administrador del Sistema')->firstOrFail();
+        $area = \App\Models\Area::where('name', 'Administración')->firstOrFail();
 
         Personnel::updateOrCreate(
             ['id_number' => '00000001'],
@@ -29,6 +27,7 @@ class PersonnelSeeder extends Seeder
                 'secondary_phone' => null,
                 'address' => 'Oficina Principal',
                 'position_id' => $adminPosition->id,
+                'area_id' => $area->id,
                 'status' => 'active',
                 'photo' => null,
             ]

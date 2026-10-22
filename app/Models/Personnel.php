@@ -19,6 +19,7 @@ class Personnel extends Model
         'secondary_phone',
         'address',
         'position_id',
+        'area_id',
         'status',
         'photo',
     ];
@@ -70,5 +71,10 @@ class Personnel extends Model
     public function position()
     {
         return $this->belongsTo(Position::class);
+    }
+
+    public function area()
+    {
+        return $this->belongsTo(Area::class);
     }
 }

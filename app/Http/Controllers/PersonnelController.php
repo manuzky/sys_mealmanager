@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\StorePersonnelRequest;
 use App\Http\Requests\UpdatePersonnelRequest;
-use App\Models\EmergencyContactRelationship;
 use App\Models\Personnel;
 use App\Models\Position;
+use App\Models\Area;
 
 class PersonnelController extends Controller
 {
@@ -57,6 +57,7 @@ class PersonnelController extends Controller
     {
         return Inertia::render('Personnel/Create', [
             'positions' => Position::where('active', true)->get(),
+            'areas' => Area::where('active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -100,6 +101,7 @@ class PersonnelController extends Controller
                 'secondary_phone' => $secondaryPhone,
                 'address' => $validated['address'] ?? null,
                 'position_id' => $validated['position_id'],
+                'area_id' => $validated['area_id'] ?? null,
                 'status' => 'active',
                 'photo' => $photoPath,
             ]);
@@ -117,6 +119,7 @@ class PersonnelController extends Controller
         $personnel->load([
             'position',
             'user.roles',
+            'area',
         ]);
 
         return Inertia::render('Personnel/Show', [
@@ -129,18 +132,20 @@ class PersonnelController extends Controller
     public function edit(Personnel $personnel)
     {
         $positions = Position::where('active', true)->get();
+        $areas = Area::where('active', true)->orderBy('name')->get();
 
-        // Si el cargo actual está inactivo, se conserva como opción.
-        if (
-            $personnel->position &&
-            !$positions->contains('id', $personnel->position->id)
-        ) {
+        if ($personnel->position && !$positions->contains('id', $personnel->position->id)) {
             $positions->push($personnel->position);
         }
 
+        if ($personnel->area && !$areas->contains('id', $personnel->area->id)) {
+            $areas->push($personnel->area);
+        }
+
         return Inertia::render('Personnel/Edit', [
-            'personnel' => $personnel->load('position'),
+            'personnel' => $personnel->load(['position', 'area']),
             'positions' => $positions,
+            'areas' => Area::where('active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -199,6 +204,7 @@ class PersonnelController extends Controller
                 'secondary_phone' => $secondaryPhone,
                 'address' => $validated['address'] ?? null,
                 'position_id' => $validated['position_id'],
+                'area_id' => $validated['area_id'] ?? null,
                 'photo' => $photoPath,
             ]);
         });

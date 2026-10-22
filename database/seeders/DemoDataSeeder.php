@@ -11,6 +11,7 @@ use Faker\Factory as Faker;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
+use App\Models\Area;
 
 class DemoDataSeeder extends Seeder
 {
@@ -23,12 +24,13 @@ class DemoDataSeeder extends Seeder
 
         /*
         |--------------------------------------------------------------------------
-        | 1. CARGOS
+        | 0. CARGOS
         |--------------------------------------------------------------------------
         */
 
         $positions = [
             ['name' => 'Administrador del Sistema', 'description' => 'Acceso total al sistema'],
+            ['name' => 'Gerente', 'description' => 'Dirección y supervisión de la gestión institucional'],
             ['name' => 'Coordinador', 'description' => 'Coordina las actividades del área'],
             ['name' => 'Analista', 'description' => 'Análisis y gestión de información'],
             ['name' => 'Desarrollador', 'description' => 'Desarrollo y mantenimiento de sistemas'],
@@ -43,9 +45,33 @@ class DemoDataSeeder extends Seeder
             );
         }
 
-        $positionIds = Position::whereIn('name', array_column($positions, 'name'))
-            ->pluck('id')
-            ->all();
+        $positionIds = Position::whereIn('name', array_column($positions, 'name'))->pluck('id')->all();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 1. ÁREAS
+        |--------------------------------------------------------------------------
+        */
+
+        $areas = [
+            ['name' => 'Administración', 'description' => 'Gestión administrativa y financiera'],
+            ['name' => 'Recursos Humanos', 'description' => 'Gestión del personal'],
+            ['name' => 'Informática', 'description' => 'Sistemas y soporte tecnológico'],
+            ['name' => 'Presupuesto', 'description' => 'Planificación y control presupuestario'],
+            ['name' => 'Atención al Ciudadano', 'description' => 'Atención y orientación al público'],
+            ['name' => 'Servicios Generales', 'description' => 'Apoyo y servicios generales'],
+            ['name' => 'Dirección', 'description' => 'Coordinación y dirección institucional'],
+            ['name' => 'Compras', 'description' => 'Adquisiciones y proveedores'],
+        ];
+
+        foreach ($areas as $area) {
+            Area::updateOrCreate(
+                ['name' => $area['name']],
+                ['description' => $area['description'], 'active' => true]
+            );
+        }
+
+        $areaIds = Area::whereIn('name', array_column($areas, 'name'))->pluck('id')->all();
 
         /*
         |--------------------------------------------------------------------------
@@ -79,6 +105,12 @@ class DemoDataSeeder extends Seeder
             'permissions.create' => 'Crear Permisos',
             'permissions.edit' => 'Editar Permisos',
             'permissions.delete' => 'Eliminar Permisos',
+
+            'areas.view' => 'Ver Áreas',
+            'areas.create' => 'Crear Áreas',
+            'areas.edit' => 'Editar Áreas',
+            'areas.delete' => 'Eliminar Áreas',
+            'areas.toggle-status' => 'Activar o Desactivar Áreas',
         ];
 
         foreach ($permissions as $name => $displayName) {
@@ -94,25 +126,12 @@ class DemoDataSeeder extends Seeder
         |--------------------------------------------------------------------------
         */
 
-        $administrador = Role::firstOrCreate([
-            'name' => 'Administrador',
-            'guard_name' => 'web',
-        ]);
-
-        $supervisor = Role::firstOrCreate([
-            'name' => 'Supervisor',
-            'guard_name' => 'web',
-        ]);
-
-        $usuario = Role::firstOrCreate([
-            'name' => 'Usuario',
-            'guard_name' => 'web',
-        ]);
+        $administrador = Role::firstOrCreate(['name' => 'Administrador', 'guard_name' => 'web',]);
+        $supervisor = Role::firstOrCreate(['name' => 'Supervisor', 'guard_name' => 'web',]);
+        $usuario = Role::firstOrCreate(['name' => 'Usuario', 'guard_name' => 'web',]);
 
         // Administrador de pruebas: todos los permisos.
-        $administrador->syncPermissions(
-            Permission::where('guard_name', 'web')->get()
-        );
+        $administrador->syncPermissions(Permission::where('guard_name', 'web')->get());
 
         // Supervisor: gestión operativa, sin administrar roles ni permisos.
         $supervisor->syncPermissions([
@@ -124,6 +143,11 @@ class DemoDataSeeder extends Seeder
             'users.create',
             'users.edit',
             'positions.view',
+            'areas.view',
+            'areas.create',
+            'areas.edit',
+            'areas.delete',
+            'areas.toggle-status',
         ]);
 
         // Usuario: acceso de consulta.
@@ -135,20 +159,44 @@ class DemoDataSeeder extends Seeder
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
+
         /*
         |--------------------------------------------------------------------------
-        | 4. 100 PERSONAS FICTICIAS Y SUS USUARIOS
+        | 4. 173 PERSONAS FICTICIAS
         |--------------------------------------------------------------------------
         */
 
-        for ($i = 1; $i <= 100; $i++) {
-            $number = str_pad((string) $i, 3, '0', STR_PAD_LEFT);
+        $cargosConAcceso = [
+            'Administrador del Sistema',
+            'Gerente',
+        ];
 
+        $cargosConAccesoIds = Position::whereIn('name', $cargosConAcceso)
+            ->pluck('id')
+            ->all();
+
+        for ($i = 1; $i <= 173; $i++) {
+            $number = str_pad((string) $i, 3, '0', STR_PAD_LEFT);
             $gender = $faker->randomElement(['male', 'female']);
 
             $firstName = $gender === 'male'
                 ? $faker->firstNameMale()
                 : $faker->firstNameFemale();
+
+            // Las primeras 5 personas serán administradores.
+            // Las siguientes 5 serán gerentes, si existe ese cargo.
+            if ($i <= 5) {
+                $positionId = Position::where('name', 'Administrador del Sistema')->value('id');
+            } elseif ($i <= 10 && in_array(
+                Position::where('name', 'Gerente')->value('id'),
+                $cargosConAccesoIds
+            )) {
+                $positionId = Position::where('name', 'Gerente')->value('id');
+            } else {
+                $positionId = $faker->randomElement(
+                    array_values(array_diff($positionIds, $cargosConAccesoIds))
+                );
+            }
 
             $personnel = Personnel::updateOrCreate(
                 ['id_number' => (string) (20000000 + $i)],
@@ -168,31 +216,33 @@ class DemoDataSeeder extends Seeder
                     'phone' => '0412' . str_pad((string) (1000000 + $i), 7, '0', STR_PAD_LEFT),
                     'secondary_phone' => null,
                     'address' => $faker->address(),
-                    'position_id' => $faker->randomElement($positionIds),
+                    'position_id' => $positionId,
+                    'area_id' => $faker->randomElement($areaIds),
                     'status' => 'active',
                     'photo' => null,
                 ]
             );
 
-            // Crea una cuenta por cada persona.
-            $user = User::updateOrCreate(
-                ['username' => "demo{$number}"],
-                [
-                    'name' => trim($personnel->first_name . ' ' . $personnel->last_name),
-                    'email' => $personnel->email,
-                    'personnel_id' => $personnel->id,
-                    'password' => Hash::make('123456789'),
-                    'active' => true,
-                ]
-            );
+            // Solo los administradores y gerentes tendrán cuenta de acceso.
+            if (in_array($positionId, $cargosConAccesoIds)) {
+                $username = "demo{$number}";
 
-            // Distribución de roles para probar distintos permisos.
-            if ($i <= 5) {
-                $user->syncRoles([$administrador]);
-            } elseif ($i <= 20) {
-                $user->syncRoles([$supervisor]);
-            } else {
-                $user->syncRoles([$usuario]);
+                $user = User::updateOrCreate(
+                    ['username' => $username],
+                    [
+                        'name' => trim($personnel->first_name . ' ' . $personnel->last_name),
+                        'email' => $personnel->email,
+                        'personnel_id' => $personnel->id,
+                        'password' => Hash::make('123456789'),
+                        'active' => true,
+                    ]
+                );
+
+                if ($positionId === Position::where('name', 'Administrador del Sistema')->value('id')) {
+                    $user->syncRoles([$administrador]);
+                } else {
+                    $user->syncRoles([$supervisor]);
+                }
             }
         }
 

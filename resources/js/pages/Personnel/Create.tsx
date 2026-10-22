@@ -11,8 +11,15 @@ interface Position {
     active: boolean;
 }
 
+interface Area {
+    id: number;
+    name: string;
+    active: boolean;
+}
+
 interface Props {
     positions: Position[];
+    areas: Area[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -20,7 +27,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Crear', href: '/personnel/create' },
 ];
 
-export default function Create({ positions }: Props) {
+export default function Create({ positions, areas }: Props) {
     const [date, setDate] = useState<Date | undefined>(undefined);
 
     const { data, setData, post, processing, errors } = useForm({
@@ -40,6 +47,7 @@ export default function Create({ positions }: Props) {
         secondary_phone: '',
         address: '',
         position_id: '',
+        area_id: null,
         photo: null as File | null,
         photo_remove: false,
     });
@@ -65,6 +73,7 @@ export default function Create({ positions }: Props) {
                     date={date}
                     setDate={setDate}
                     positions={positions}
+                    areas={areas}
                     currentPhoto={null}
                     onSubmit={submit}
                     submitLabel="Guardar"

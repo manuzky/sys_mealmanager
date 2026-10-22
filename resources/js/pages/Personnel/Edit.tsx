@@ -19,6 +19,7 @@ interface Personnel {
     address: string | null;
     gender: string | null;
     position_id: number | null;
+    area_id: number | null;
     photo: string | null;
 }
 
@@ -28,12 +29,19 @@ interface Position {
     active: boolean;
 }
 
+interface Area {
+    id: number;
+    name: string;
+    active: boolean;
+}
+
 interface Props {
     personnel: Personnel;
     positions: Position[];
+    areas: Area[];
 }
 
-export default function Edit({ personnel, positions }: Props) {
+export default function Edit({ personnel, positions, areas }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Personal', href: '/personnel' },
         { title: 'Editar', href: `/personnel/${personnel.id}/edit` },
@@ -44,10 +52,17 @@ export default function Edit({ personnel, positions }: Props) {
         return new Date(year, month - 1, day);
     };
 
-    const [date, setDate] = useState<Date | undefined>(personnel.birth_date ? parseLocalDate(personnel.birth_date) : undefined);
+    const [date, setDate] = useState<Date | undefined>(
+        personnel.birth_date ? parseLocalDate(personnel.birth_date) : undefined
+    );
+
     const emailParts = personnel.email?.split('@') ?? ['', ''];
-    const emailDomain = emailParts[1] && ['gmail.com', 'hotmail.com', 'outlook.com'].includes(emailParts[1]) ? `@${emailParts[1]}` : 'other';
+    const emailDomain =
+        emailParts[1] && ['gmail.com', 'hotmail.com', 'outlook.com'].includes(emailParts[1])
+            ? `@${emailParts[1]}`
+            : 'other';
     const emailCustomDomain = emailDomain === 'other' ? `@${emailParts[1]}` : '';
+
     const phoneCode = personnel.phone?.substring(0, 4) || '0412';
     const phoneNumber = personnel.phone?.substring(4) ?? '';
     const secondaryPhoneCode = personnel.secondary_phone?.substring(0, 4) || '0412';
@@ -70,6 +85,7 @@ export default function Edit({ personnel, positions }: Props) {
         secondary_phone: secondaryPhoneNumber,
         address: personnel.address ?? '',
         position_id: personnel.position_id != null ? String(personnel.position_id) : '',
+        area_id: personnel.area_id != null ? String(personnel.area_id) : null,
         photo: null as File | null,
         photo_remove: false,
         _method: 'put',
@@ -77,6 +93,7 @@ export default function Edit({ personnel, positions }: Props) {
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
+
         post(route('personnel.update', personnel.id), {
             forceFormData: true,
             onSuccess: () => notify.success('Personal editado correctamente'),
@@ -87,7 +104,8 @@ export default function Edit({ personnel, positions }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Editar Personal" />
-            <div className="p-6 w-full space-y-6">
+
+            <div className="w-full space-y-6 p-6">
                 <Form
                     data={data}
                     setData={setData}
@@ -96,6 +114,7 @@ export default function Edit({ personnel, positions }: Props) {
                     date={date}
                     setDate={setDate}
                     positions={positions}
+                    areas={areas}
                     currentPhoto={personnel.photo}
                     onSubmit={submit}
                     submitLabel="Actualizar"

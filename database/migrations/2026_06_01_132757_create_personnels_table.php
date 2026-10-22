@@ -43,6 +43,10 @@ return new class extends Migration
                 ->constrained('positions')
                 ->restrictOnDelete();
 
+            $table->foreignId('area_id')
+                ->constrained('areas')
+                ->restrictOnDelete();
+
             // Estado y foto
             $table->string('status')->default('active');
             $table->text('photo')->nullable();

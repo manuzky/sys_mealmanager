@@ -30,9 +30,7 @@ export default function Form({ data, setData, submit, processing, errors, submit
                     value={data.name}
                     onChange={(e) => setData('name', e.target.value)}
                 />
-                {errors.name && (
-                    <p className="text-red-500 text-sm">{errors.name}</p>
-                )}
+                {errors.name && (<p className="text-red-500 text-sm">{errors.name}</p>)}
             </div>
 
             {/* DESCRIPTION */}
@@ -46,9 +44,7 @@ export default function Form({ data, setData, submit, processing, errors, submit
                     value={data.description}
                     onChange={(e) => setData('description', e.target.value)}
                 />
-                {errors.description && (
-                    <p className="text-red-500 text-sm">{errors.description}</p>
-                )}
+                {errors.description && (<p className="text-red-500 text-sm">{errors.description}</p>)}
             </div>
 
             {/* BUTTON */}
@@ -61,10 +57,7 @@ export default function Form({ data, setData, submit, processing, errors, submit
                     Cancelar
                 </Button>
 
-                <Button
-                    type="submit"
-                    disabled={processing}
-                >
+                <Button type="submit" disabled={processing}>
                     {processing ? 'Guardando...' : submitLabel}
                 </Button>
             </div>

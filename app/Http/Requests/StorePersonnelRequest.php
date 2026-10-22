@@ -37,6 +37,7 @@ class StorePersonnelRequest extends FormRequest
             'address' => ['nullable', 'string'],
 
             'position_id' => ['required', 'exists:positions,id'],
+            'area_id' => ['required', 'exists:areas,id'],
 
             'photo' => [
                 'nullable',

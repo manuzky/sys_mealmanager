@@ -14,12 +14,13 @@ type PersonnelFormProps = {
     date: Date | undefined;
     setDate: (date: Date | undefined) => void;
     positions: any[];
+    areas: { id: number; name: string; active: boolean }[];
     currentPhoto?: string | null;
     submitLabel?: string;
     onSubmit: (e: React.FormEvent) => void;
 };
 
-export default function Form({ data, setData, errors, processing, date, setDate, positions, currentPhoto, submitLabel = 'Guardar', onSubmit, }: PersonnelFormProps) {
+export default function Form({ data, setData, errors, processing, date, setDate, positions, areas, currentPhoto, submitLabel = 'Guardar', onSubmit, }: PersonnelFormProps) {
     const formatIdNumber = (value: string) => {
         const digits = value.replace(/\D/g, '');
 
@@ -143,12 +144,12 @@ export default function Form({ data, setData, errors, processing, date, setDate,
                     </div>
 
                     <div className="col-span-12 lg:col-span-9">
-                        <div className="grid grid-cols-2 gap-6">
+                        <div className="grid grid-cols-3 gap-6">
                             {/* ===================== DATOS PERSONALES ===================== */}
                             {/* Nombre */}
                             <div>
                                 <label className="mb-2 block text-sm font-medium">
-                                    Nombres(s) <span className="text-red-500">*</span>
+                                    Nombres (s) <span className="text-red-500">*</span>
                                 </label>
                                 <Input placeholder="Nombre" value={data.first_name} onChange={(e) => setData('first_name', e.target.value)} />
 
@@ -158,7 +159,7 @@ export default function Form({ data, setData, errors, processing, date, setDate,
                             {/* Apellido */}
                             <div>
                                 <label className="mb-2 block text-sm font-medium">
-                                    Apellido(s) <span className="text-red-500">*</span>
+                                    Apellido (s) <span className="text-red-500">*</span>
                                 </label>
                                 <Input placeholder="Apellido" value={data.last_name} onChange={(e) => setData('last_name', e.target.value)} />
 
@@ -229,7 +230,7 @@ export default function Form({ data, setData, errors, processing, date, setDate,
                                 </label>
 
                                 <Select value={data.gender} onValueChange={(value) => setData('gender', value)} >
-                                    <SelectTrigger>
+                                    <SelectTrigger className={errors.area_id ? 'border-red-500' : ''}>
                                         <SelectValue placeholder="Seleccione..." />
                                     </SelectTrigger>
 
@@ -255,7 +256,7 @@ export default function Form({ data, setData, errors, processing, date, setDate,
                                 </label>
 
                                 <Select value={data.marital_status} onValueChange={(value) => setData('marital_status', value)}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className={errors.area_id ? 'border-red-500' : ''}>
                                         <SelectValue placeholder="Seleccione..." />
                                     </SelectTrigger>
 
@@ -281,6 +282,32 @@ export default function Form({ data, setData, errors, processing, date, setDate,
                                 {errors.marital_status && (<p className="text-sm text-red-500 mt-1">{errors.marital_status}</p>)}
                             </div>
 
+                            {/* Área */}
+                            <div>
+                                <label className="mb-2 block text-sm font-medium">
+                                    Área <span className="text-red-500">*</span>
+                                </label>
+
+                                <Select
+                                    value={data.area_id ? String(data.area_id) : ''}
+                                    onValueChange={(value) => setData('area_id', value)}
+                                >
+                                    <SelectTrigger className={errors.area_id ? 'border-red-500' : ''}>
+                                        <SelectValue placeholder="Seleccione un área" />
+                                    </SelectTrigger>
+
+                                    <SelectContent>
+                                        {areas.map((area) => (
+                                            <SelectItem key={area.id} value={String(area.id)}>
+                                                {area.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
+                                {errors.area_id && (<p className="mt-1 text-sm text-red-500">{errors.area_id}</p>)}
+                            </div>
+
                             {/* Cargo */}
                             <div>
                                 <label className="mb-2 block text-sm font-medium">
@@ -288,7 +315,7 @@ export default function Form({ data, setData, errors, processing, date, setDate,
                                 </label>
 
                                 <Select value={data.position_id ? String(data.position_id) : ''} onValueChange={(value) => setData('position_id', value)} >
-                                    <SelectTrigger>
+                                    <SelectTrigger className={errors.area_id ? 'border-red-500' : ''}>
                                         <SelectValue placeholder="Seleccione un cargo" />
                                     </SelectTrigger>
 
@@ -441,9 +468,10 @@ export default function Form({ data, setData, errors, processing, date, setDate,
                 </div>
 
                 {/* Dirección */}
+                <br />
                 <div>
                     <label className="mb-2 block text-sm font-medium">
-                        Dirección
+                        Dirección de vivienda
                     </label>
 
                     <Input
