@@ -111,6 +111,12 @@ class DemoDataSeeder extends Seeder
             'areas.edit' => 'Editar Áreas',
             'areas.delete' => 'Eliminar Áreas',
             'areas.toggle-status' => 'Activar o Desactivar Áreas',
+
+            'meals.view' => 'Ver Comidas',
+            'meals.create' => 'Crear Comidas',
+            'meals.edit' => 'Editar Comidas',
+            'meals.delete' => 'Eliminar Comidas',
+            'meals.toggle-status' => 'Activar o Desactivar Comidas',
         ];
 
         foreach ($permissions as $name => $displayName) {
@@ -148,6 +154,11 @@ class DemoDataSeeder extends Seeder
             'areas.edit',
             'areas.delete',
             'areas.toggle-status',
+            'meals.view',
+            'meals.create',
+            'meals.edit',
+            'meals.delete',
+            'meals.toggle-status',
         ]);
 
         // Usuario: acceso de consulta.

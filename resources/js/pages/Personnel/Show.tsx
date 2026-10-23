@@ -332,13 +332,13 @@ export function PersonnelShowContent({ personnel }: Props) {
                             value={personnel.area?.name ?? 'Sin área asignada'}
                         />
 
-                        <Info
+                        {/* <Info
                             icon={Contact}
                             label="Identificador interno"
                             value={`PER-${String(personnel.id).padStart(4, '0')}`}
-                        />
+                        /> */}
 
-                        <Info
+                        {/* <Info
                             icon={CalendarDays}
                             label="Estado del trabajador"
                             value={
@@ -346,7 +346,7 @@ export function PersonnelShowContent({ personnel }: Props) {
                                     {status.label}
                                 </Badge>
                             }
-                        />
+                        /> */}
                     </div>
                 </Section>
             </div>

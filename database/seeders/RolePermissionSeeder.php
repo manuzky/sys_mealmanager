@@ -55,6 +55,13 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'areas.edit', 'display_name' => 'Editar Áreas'],
             ['name' => 'areas.delete', 'display_name' => 'Eliminar Áreas'],
             ['name' => 'areas.toggle-status', 'display_name' => 'Activar o Desactivar Áreas'],
+
+            // MEALS
+            ['name' => 'meals.view', 'display_name' => 'Ver Comidas'],
+            ['name' => 'meals.create', 'display_name' => 'Crear Comidas'],
+            ['name' => 'meals.edit', 'display_name' => 'Editar Comidas'],
+            ['name' => 'meals.delete', 'display_name' => 'Eliminar Comidas'],
+            ['name' => 'meals.toggle-status', 'display_name' => 'Activar o Desactivar Comidas'],
         ];
 
         foreach ($permissions as $permission) {

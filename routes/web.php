@@ -8,6 +8,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\AreaController;
+use App\Http\Controllers\MealController;
 
 Route::get('/', function () {
     return redirect('/login');
@@ -32,6 +33,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('areas', AreaController::class);
     Route::patch('/areas/{area}/toggle-status', [AreaController::class, 'toggleStatus'])->name('areas.toggle-status');
+
+    Route::resource('meals', MealController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+    Route::patch('/meals/{meal}/toggle-active', [MealController::class,'toggleActive',])->name('meals.toggle-active');
 });
 
 require __DIR__.'/settings.php';
