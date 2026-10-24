@@ -24,6 +24,12 @@ return new class extends Migration
                 ->constrained('users')
                 ->nullOnDelete();
 
+            $table->foreignId('monday_meal_id')->nullable()->constrained('meals')->nullOnDelete();
+            $table->foreignId('tuesday_meal_id')->nullable()->constrained('meals')->nullOnDelete();
+            $table->foreignId('wednesday_meal_id')->nullable()->constrained('meals')->nullOnDelete();
+            $table->foreignId('thursday_meal_id')->nullable()->constrained('meals')->nullOnDelete();
+            $table->foreignId('friday_meal_id')->nullable()->constrained('meals')->nullOnDelete();
+
             $table->timestamps();
 
             $table->unique(['area_id', 'week_start']);

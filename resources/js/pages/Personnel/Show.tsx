@@ -4,6 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Can } from '@/components/can';
 import {
     ArrowLeft,
     Pencil,
@@ -230,21 +231,25 @@ export function PersonnelShowContent({ personnel }: Props) {
                                 </div>
 
                                 <div className="flex shrink-0 gap-2">
-                                    <Link
-                                        href="/personnel"
-                                        className="inline-flex h-9 items-center justify-center gap-2 rounded-md border bg-background px-3 text-sm font-medium transition-colors hover:bg-muted"
-                                    >
-                                        <ArrowLeft className="h-4 w-4" />
-                                        Volver
-                                    </Link>
+                                    <Can permission="personnel.view">
+                                        <Link
+                                            href="/personnel"
+                                            className="inline-flex h-9 items-center justify-center gap-2 rounded-md border bg-background px-3 text-sm font-medium transition-colors hover:bg-muted"
+                                        >
+                                            <ArrowLeft className="h-4 w-4" />
+                                            Volver
+                                        </Link>
+                                    </Can>
 
-                                    <Link
-                                        href={`/personnel/${personnel.id}/edit`}
-                                        className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                                    >
-                                        <Pencil className="h-4 w-4" />
-                                        Editar
-                                    </Link>
+                                    <Can permission="personnel.edit">
+                                        <Link
+                                            href={`/personnel/${personnel.id}/edit`}
+                                            className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                            Editar
+                                        </Link>
+                                    </Can>
                                 </div>
                             </div>
 
@@ -287,23 +292,13 @@ export function PersonnelShowContent({ personnel }: Props) {
                         <Info
                             icon={Cake}
                             label="Fecha de nacimiento"
-                            value={
-                                personnel.birth_date
-                                    ? `${formatDate(personnel.birth_date)}${age ? ` (${age})` : ''}`
-                                    : 'No registrada'
-                            }
+                            value={personnel.birth_date ? `${formatDate(personnel.birth_date)}${age ? ` (${age})` : ''}` : 'No registrada'}
                         />
 
                         <Info
                             icon={personnel.gender === 'male' ? Mars : Venus}
                             label="Sexo"
-                            value={
-                                personnel.gender === 'male'
-                                    ? 'Masculino'
-                                    : personnel.gender === 'female'
-                                      ? 'Femenino'
-                                      : 'No especificado'
-                            }
+                            value={personnel.gender === 'male' ? 'Masculino' : personnel.gender === 'female' ? 'Femenino' : 'No especificado'}
                         />
 
                         <Info

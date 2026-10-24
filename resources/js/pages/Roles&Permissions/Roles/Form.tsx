@@ -35,6 +35,7 @@ const groupLabels: Record<string, string> = {
     Roles: 'Roles',
     Permissions: 'Permisos',
     Positions: 'Cargos',
+    Meals: 'Comidas',
 };
 
 const formatGroupName = (group: string) => {

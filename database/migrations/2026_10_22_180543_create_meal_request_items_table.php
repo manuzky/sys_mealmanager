@@ -23,8 +23,9 @@ return new class extends Migration
                 ->restrictOnDelete();
 
             $table->foreignId('meal_id')
+                ->nullable()
                 ->constrained('meals')
-                ->restrictOnDelete();
+                ->nullOnDelete();
 
             $table->date('day');
             $table->timestamps();

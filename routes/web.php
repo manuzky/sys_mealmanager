@@ -9,6 +9,8 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\MealController;
+use App\Http\Controllers\MealRequestController;
+use App\Models\Area;
 
 Route::get('/', function () {
     return redirect('/login');
@@ -16,8 +18,16 @@ Route::get('/', function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+        $areas = Area::query()
+            ->where('active', true)
+            ->withCount('personnels')
+            ->orderBy('name')
+            ->get(['id', 'name', 'description']);
+
+        return Inertia::render('dashboard', [
+            'areas' => $areas,
+        ]);
+    })->middleware(['auth', 'verified'])->name('dashboard');
 
     Route::resource('personnel', PersonnelController::class);
     Route::patch('/personnel/{personnel}/toggle-status', [PersonnelController::class, 'toggleStatus'])->name('personnel.toggle-status');
@@ -36,6 +46,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('meals', MealController::class)->only(['index', 'create', 'store', 'edit', 'update']);
     Route::patch('/meals/{meal}/toggle-active', [MealController::class,'toggleActive',])->name('meals.toggle-active');
+
+    Route::resource('meal-requests', MealRequestController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+    Route::get('/meal-requests/{meal_request}', [MealRequestController::class, 'show'])->name('meal-requests.show');
 });
 
 require __DIR__.'/settings.php';

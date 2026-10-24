@@ -11,6 +11,11 @@ class MealRequest extends Model
     protected $fillable = [
         'area_id',
         'week_start',
+        'monday_meal_id',
+        'tuesday_meal_id',
+        'wednesday_meal_id',
+        'thursday_meal_id',
+        'friday_meal_id',
         'created_by',
     ];
 
@@ -34,5 +39,32 @@ class MealRequest extends Model
     public function items(): HasMany
     {
         return $this->hasMany(MealRequestItem::class);
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------
+
+    public function mondayMeal(): BelongsTo
+    {
+        return $this->belongsTo(Meal::class, 'monday_meal_id');
+    }
+
+    public function tuesdayMeal(): BelongsTo
+    {
+        return $this->belongsTo(Meal::class, 'tuesday_meal_id');
+    }
+
+    public function wednesdayMeal(): BelongsTo
+    {
+        return $this->belongsTo(Meal::class, 'wednesday_meal_id');
+    }
+
+    public function thursdayMeal(): BelongsTo
+    {
+        return $this->belongsTo(Meal::class, 'thursday_meal_id');
+    }
+
+    public function fridayMeal(): BelongsTo
+    {
+        return $this->belongsTo(Meal::class, 'friday_meal_id');
     }
 }
