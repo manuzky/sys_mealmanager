@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { User, Folder, BookUser, Tag, LayoutGrid, Shield, MapPinHouse, Utensils, ShoppingCart  } from 'lucide-react';
+import { User, Folder, BookUser, Tag, LayoutGrid, Shield, MapPinHouse, Utensils, ShoppingCart, NotebookText  } from 'lucide-react';
 import AppLogo from './app-logo';
 import { useCan } from '@/lib/useCan';
 import { Settings } from 'lucide-react';
@@ -26,6 +26,12 @@ const platformItems: NavItem[] = [
         url: '/meals',
         icon: Utensils,
         permission: 'meals.view',
+    },
+    {
+        title: 'Reportes',
+        url: '/reports',
+        icon: NotebookText,
+        // permission: 'meals.view',
     },
 ];
 

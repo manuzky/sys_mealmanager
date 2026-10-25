@@ -11,6 +11,7 @@ use App\Http\Controllers\AreaController;
 use App\Http\Controllers\MealController;
 use App\Http\Controllers\MealRequestController;
 use App\Models\Area;
+use App\Http\Controllers\MealReportController;
 
 Route::get('/', function () {
     return redirect('/login');
@@ -49,6 +50,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('meal-requests', MealRequestController::class)->only(['index', 'create', 'store', 'edit', 'update']);
     Route::get('/meal-requests/{meal_request}', [MealRequestController::class, 'show'])->name('meal-requests.show');
+
+    Route::get('/reports', [MealReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/meals/chef', [MealReportController::class, 'chef'])->name('reports.meals.chef.pdf');
 });
 
 require __DIR__.'/settings.php';
