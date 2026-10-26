@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             // Datos ficticios para desarrollo y pruebas.
             DemoDataSeeder::class,
             MealSeeder::class,
+            MealRequestDemoSeeder::class,
         ]);
     }
 }

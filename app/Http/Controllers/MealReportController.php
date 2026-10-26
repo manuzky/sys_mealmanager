@@ -81,9 +81,9 @@ class MealReportController extends Controller
             $days[$dayKey]['totals'][$mealName] = ($days[$dayKey]['totals'][$mealName] ?? 0) + 1;
         }
 
-        $days = array_filter($days, function ($day) {
+        $days = array_values(array_filter($days, function ($day) {
             return !empty($day['totals']);
-        });
+        }));
 
 
         $pdf = Pdf::loadView('reports.meals.chef', [

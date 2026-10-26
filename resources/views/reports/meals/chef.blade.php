@@ -17,8 +17,8 @@
 
         .header {
             border-bottom: 3px solid #1e4773;
-            padding-bottom: 16px;
-            margin-bottom: 22px;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .header-table {
@@ -48,31 +48,34 @@
             font-size: 9px;
             font-weight: bold;
             letter-spacing: 1px;
-            margin-bottom: 7px;
+            margin-bottom: 5px;
             text-transform: uppercase;
         }
 
         h1 {
             color: #1e4773;
-            font-size: 21px;
-            margin: 0 0 7px;
+            font-size: 19px;
+            margin: 0 0 5px;
         }
 
         .subtitle {
             color: #64748b;
-            margin: 4px 0;
+            margin: 3px 0;
             font-size: 9px;
         }
 
         .week {
             color: #334155;
             font-size: 10px;
-            margin-top: 8px;
+            margin-top: 5px;
         }
 
         .day {
-            margin-bottom: 24px;
-            page-break-inside: avoid;
+            margin-bottom: 0;
+        }
+
+        .day.new-page {
+            page-break-before: always;
         }
 
         .day-heading {
@@ -81,7 +84,7 @@
             padding: 10px;
             font-size: 12px;
             font-weight: bold;
-            margin: 18px 0 12px;
+            margin: 8px 0 12px;
         }
 
         .day-heading small {
@@ -94,13 +97,13 @@
             color: #1e4773;
             font-size: 11px;
             font-weight: bold;
-            margin: 14px 0 6px;
+            margin: 12px 0 6px;
         }
 
         table.data {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .data th {
@@ -131,15 +134,15 @@
         .total-box {
             background: #f0f5fa;
             border-left: 4px solid #1e4773;
-            padding: 12px;
-            margin-top: 14px;
+            padding: 10px;
+            margin-top: 10px;
         }
 
         .total-title {
             color: #1e4773;
             font-weight: bold;
             font-size: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         table.totals {
@@ -149,7 +152,7 @@
 
         .totals td {
             border: none;
-            padding: 5px 8px 5px 0;
+            padding: 4px 8px 4px 0;
             font-size: 9px;
         }
 
@@ -187,9 +190,11 @@
                 <td>
                     <div class="kicker">Control de alimentación</div>
                     <h1>REPORTE SEMANAL<br>DE COCINA</h1>
+
                     <p class="subtitle">
                         Consolidado de raciones por día y área
                     </p>
+
                     <p class="week">
                         <strong>Semana:</strong>
                         {{ \Carbon\Carbon::parse($weekStart)->format('d/m/Y') }}
@@ -197,6 +202,7 @@
                         {{ \Carbon\Carbon::parse($weekEnd)->format('d/m/Y') }}
                     </p>
                 </td>
+
                 <td style="width: 55px; text-align: right;">
                     <div class="logo">RC</div>
                 </td>
@@ -204,10 +210,11 @@
         </table>
     </div>
 
-    @forelse ($days as $day)
-        <div class="day">
+    @forelse ($days as $index => $day)
+        <div class="day {{ $index > 0 ? 'new-page' : '' }}">
             <div class="day-heading">
                 {{ mb_strtoupper($day['label'], 'UTF-8') }}
+
                 <small>
                     &nbsp;|&nbsp;
                     {{ array_sum(array_values($day['totals'])) }}
@@ -228,13 +235,16 @@
                             <th class="quantity">Raciones</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         @foreach ($area['meals'] as $mealName => $meal)
                             <tr>
                                 <td>{{ $mealName }}</td>
+
                                 <td class="names">
                                     {{ implode(', ', $meal['personnel']) ?: 'Sin nombres disponibles' }}
                                 </td>
+
                                 <td class="quantity">
                                     {{ $meal['quantity'] }}
                                 </td>
@@ -266,6 +276,5 @@
             No existen comidas asignadas para la semana seleccionada.
         </div>
     @endforelse
-
 </body>
 </html>
