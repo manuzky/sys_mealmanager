@@ -31,15 +31,7 @@ interface Props {
     submitLabel?: string;
 }
 
-export default function Form({
-    data,
-    setData,
-    submit,
-    processing,
-    errors,
-    currentPhoto,
-    submitLabel = 'Guardar comida',
-}: Props) {
+export default function Form({ data,setData,submit,processing,errors,currentPhoto,submitLabel = 'Guardar comida' }: Props) {
     const [preview, setPreview] = useState<string | null>(null);
 
     useEffect(() => {
@@ -50,7 +42,6 @@ export default function Form({
 
         const url = URL.createObjectURL(data.photo);
         setPreview(url);
-
         return () => URL.revokeObjectURL(url);
     }, [data.photo]);
 
@@ -217,9 +208,7 @@ export default function Form({
                                     type="file"
                                     accept=".jpg,.jpeg,.png,.webp"
                                     className="cursor-pointer bg-background text-xs"
-                                    onChange={(e) => {
-                                        setData('photo', e.target.files?.[0] ?? null);
-                                    }}
+                                    onChange={(e) => {setData('photo', e.target.files?.[0] ?? null);}}
                                 />
 
                                 <p className="text-xs text-muted-foreground">
@@ -238,9 +227,7 @@ export default function Form({
                                     </Button>
                                 )}
 
-                                {errors.photo && (
-                                    <p className="text-sm text-red-500">{errors.photo}</p>
-                                )}
+                                {errors.photo && (<p className="text-sm text-red-500">{errors.photo}</p>)}
                             </div>
                         </div>
                     </div>
@@ -264,18 +251,12 @@ export default function Form({
                 </div>
 
                 <div className="flex flex-col-reverse gap-2 sm:flex-row">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => window.history.back()}
-                    >
+                    <Button type="button" variant="outline" onClick={() => window.history.back()}>
                         Cancelar
                     </Button>
 
                     <Button type="submit" disabled={processing} className="min-w-40">
-                        {processing ? (
-                            'Guardando...'
-                        ) : (
+                        {processing ? ('Guardando...') : (
                             <>
                                 <ImagePlus className="mr-2 h-4 w-4" />
                                 {submitLabel}

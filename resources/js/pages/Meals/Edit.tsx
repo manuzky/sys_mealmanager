@@ -28,11 +28,13 @@ export default function Edit({ meal }: Props) {
         { title: 'Editar', href: route('meals.edit', meal.id) },
     ];
 
-    const { data, setData, put, processing, errors } = useForm<{
+    const { data, setData, post, processing, errors } = useForm<{
+        _method: 'put';
         name: string;
         ingredients: string;
         photo: File | null;
     }>({
+        _method: 'put',
         name: meal.name ?? '',
         ingredients: meal.ingredients ?? '',
         photo: null,
@@ -41,7 +43,7 @@ export default function Edit({ meal }: Props) {
     function submit(e: React.FormEvent) {
         e.preventDefault();
 
-        put(route('meals.update', meal.id), {
+        post(route('meals.update', meal.id), {
             forceFormData: true,
             onSuccess: () => {
                 notify.success('Comida actualizada correctamente');
@@ -65,6 +67,7 @@ export default function Edit({ meal }: Props) {
                             <button
                                 type="button"
                                 className="text-red-500 transition-colors hover:text-red-600"
+                                aria-label="Información sobre los campos obligatorios"
                             >
                                 <Info className="h-5 w-5" />
                             </button>

@@ -90,9 +90,7 @@ class MealController extends Controller
             Storage::disk('public')->delete($oldPhoto);
         }
 
-        return redirect()
-            ->route('meals.index')
-            ->with('success', 'Comida actualizada correctamente.');
+        return redirect()->route('meals.index')->with('success', 'Comida actualizada correctamente.');
     }
 
     /*------------------------------------------------------------------------------------------------------------------------------------------*/
